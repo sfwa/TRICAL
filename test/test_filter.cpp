@@ -29,7 +29,135 @@ SOFTWARE.
 /* C++ complains about the C99 'restrict' qualifier. Just ignore it. */
 #define restrict
 
-extern "C" {
 #include "TRICAL.h"
 #include "filter.h"
+
+/*
+Test measurement calibration with the identity matrix -- all state values are
+zero because the identity matrix is added to the symmetric scale factor matrix
+during measurement calibration.
+*/
+TEST(Filter, CalibrateIdentity) {
+    float state[9] = {
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0,
+             0.0, 0.0,
+                  0.0
+    };
+    float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
+
+    _trical_measurement_calibrate(state, measurement, result);
+    EXPECT_FLOAT_EQ(measurement[0], result[0]);
+    EXPECT_FLOAT_EQ(measurement[1], result[1]);
+    EXPECT_FLOAT_EQ(measurement[2], result[2]);
+}
+
+/*
+Test measurement calibration with a bias, but the identity matrix for scale
+factors.
+
+This test would permit calibration for zero-point bias and hard iron
+distortion only.
+*/
+TEST(Filter, CalibrateBias) {
+    float state[9] = {
+        1.0, 2.0, 3.0,
+        0.0, 0.0, 0.0,
+             0.0, 0.0,
+                  0.0
+    };
+    float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
+
+    _trical_measurement_calibrate(state, measurement, result);
+    EXPECT_FLOAT_EQ(0.0, result[0]);
+    EXPECT_FLOAT_EQ(0.0, result[1]);
+    EXPECT_FLOAT_EQ(0.0, result[2]);
+}
+
+/*
+Test measurement calibration with an orthogonal scale factor matrix -- this
+is added to the identity matrix during the calculation, so the actual scale
+factor matrix used will be:
+2  0  0
+0  2  0
+0  0  2
+
+This test would permit calibration for soft iron distortion of the magnetic
+field, as well as scale factor error in the magnetometer.
+*/
+TEST(Filter, CalibrateOrthogonal) {
+    float state[9] = {
+        0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+             1.0, 0.0,
+                  1.0
+    };
+    float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
+
+    _trical_measurement_calibrate(state, measurement, result);
+    EXPECT_FLOAT_EQ(2.0, result[0]);
+    EXPECT_FLOAT_EQ(4.0, result[1]);
+    EXPECT_FLOAT_EQ(6.0, result[2]);
+}
+
+/*
+Test measurement calibration with a full symmetric scale factor matrix. This
+test would permit calibration for soft iron distortion, as well as scale
+factor error and axis misalignment in the sensor.
+*/
+TEST(Filter, CalibrateSymmetric) {
+    float state[9] = {
+        0.0, 0.0, 0.0,
+        1.0, 0.5, 0.1,
+             1.0, 0.5,
+                  1.0
+    };
+    float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
+
+    _trical_measurement_calibrate(state, measurement, result);
+    EXPECT_FLOAT_EQ(3.3, result[0]);
+    EXPECT_FLOAT_EQ(6.0, result[1]);
+    EXPECT_FLOAT_EQ(7.1, result[2]);
+}
+
+/*
+Test measurement calibration with a full symmetric scale factor matrix as well
+as bias. This test would permit calibration for hard and soft iron distortion,
+as well as bias, scale factor error and axis misalignment in the sensor.
+
+(The general case, including body/sensor axis misalignment, would require
+non-symmetric matrices as well as knowledge of the body attitude at each
+calibration step, and is easier to do elsewhere -- e.g. by measurement.)
+*/
+TEST(Filter, CalibrateFull) {
+    float state[9] = {
+        3.0, 2.0, 1.0,
+        1.0, 0.5, 0.1,
+             1.0, 0.5,
+                  1.0
+    };
+    float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
+
+    _trical_measurement_calibrate(state, measurement, result);
+    EXPECT_FLOAT_EQ(-3.8, result[0]);
+    EXPECT_FLOAT_EQ(0.0, result[1]);
+    EXPECT_FLOAT_EQ(3.8, result[2]);
+}
+
+/*
+Now test measurement reduction, from a raw 3-axis sensor reading to a scalar
+output based on the current calibration estimate. This is used in the UKF
+implementation to generate a measurement estimate for each sigma point.
+*/
+TEST(Filter, MeasurementReduction) {
+    float state[9] = {
+        0.0, 0.0, 0.0,
+        1.0, 0.5, 0.1,
+             1.0, 0.5,
+                  1.0
+    };
+    float measurement[3] = { 1.0, 2.0, 3.0 }, result;
+
+    result = _trical_measurement_reduce(state, measurement);
+    EXPECT_FLOAT_EQ(9.864076, result);
 }

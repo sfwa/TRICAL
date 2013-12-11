@@ -78,9 +78,20 @@ The implementation follows the general approach of https://github.com/sfwa/ukf
 however there a number of simplifications due to the restricted problem
 domain.
 
-Since there is no process model, the apriori mean is 0, and W' is just the
-set of sigma points. That in turn means that there's no need to calculate
-state covariance from W'.
+Since there is no process model, the apriori mean is the same as the state at
+the start of the update step, and W' is just the set of sigma points. That in
+turn means that there's no need to calculate propagated state covariance from
+W'; it's the same as the covariance was at the start of the update step.
+
+The scalar measurement model also simplifies a lot of the cross-correlation
+and Kalman gain calculation.
+
+Like the full SFWA UKF, and unlike the papers upon which this approach is
+based, we're actually using the scaled unscented Kalman filter. The main
+differences are in the choices of scaling parameters, including alpha, beta
+and kappa. Given the relatively small dimensionality of the filter it's
+probably not strictly necessary to use the scaled formulation, but we'd
+already implemented that so it seemed easier to continue with that approach.
 */
 
 /*

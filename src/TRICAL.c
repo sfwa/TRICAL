@@ -42,6 +42,7 @@ void TRICAL_init(TRICAL_instance_t *instance) {
     memset(instance, 0, sizeof(TRICAL_instance_t));
 
     instance->field_norm = 1.0f;
+    instance->measurement_noise = 1e-6f;
 
     /*
     Set the state covariance diagonal to a small value, so that we can run the
@@ -49,7 +50,7 @@ void TRICAL_init(TRICAL_instance_t *instance) {
     */
     unsigned int i;
     for (i = 0; i < TRICAL_STATE_DIM * TRICAL_STATE_DIM; i += 10) {
-        instance->state_covariance[i] = 1e-6f;
+        instance->state_covariance[i] = 1e-2f;
     }
 }
 
@@ -61,7 +62,7 @@ by the ratio of new norm:old norm.
 */
 void TRICAL_norm_set(TRICAL_instance_t *instance, float norm) {
     assert(instance);
-    assert(norm > 0.0);
+    assert(norm > 0.0f);
 
     if (fabs(norm - instance->field_norm) < FLT_EPSILON) {
         return;
@@ -105,7 +106,7 @@ Sets the standard deviation in measurement supplied to `instance` to `noise`.
 */
 void TRICAL_noise_set(TRICAL_instance_t *instance, float noise) {
     assert(instance);
-    assert(noise > 0.0);
+    assert(noise > 0.0f);
 
     instance->measurement_noise = noise;
 }
@@ -143,6 +144,7 @@ float measurement[3]) {
     assert(measurement);
 
     _trical_filter_iterate(instance, measurement);
+    instance->measurement_count++;
 }
 
 /*

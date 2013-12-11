@@ -32,7 +32,7 @@ extern "C" {
 
 #define TRICAL_ALPHA_2 (1.0f)
 #define TRICAL_BETA (0.0f)
-#define TRICAL_KAPPA (3.0f)
+#define TRICAL_KAPPA (1.0f)
 #define TRICAL_LAMBDA (TRICAL_ALPHA_2 * (TRICAL_STATE_DIM + TRICAL_KAPPA) - \
                        TRICAL_STATE_DIM)
 #define TRICAL_DIM_PLUS_LAMBDA (TRICAL_ALPHA_2 * \

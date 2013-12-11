@@ -29,13 +29,318 @@ SOFTWARE.
 /* C++ complains about the C99 'restrict' qualifier. Just ignore it. */
 #define restrict
 
-extern "C" {
 #include "TRICAL.h"
-}
+
 
 TEST(TRICAL, Initialisation) {
     TRICAL_instance_t cal;
 
     TRICAL_init(&cal);
     EXPECT_FLOAT_EQ(1.0f, TRICAL_norm_get(&cal));
+}
+
+/* Check that the field norm can be set and read */
+TEST(TRICAL, NormGetSet) {
+    TRICAL_instance_t cal;
+
+    TRICAL_init(&cal);
+    TRICAL_norm_set(&cal, 2.0f);
+    EXPECT_FLOAT_EQ(2.0f, TRICAL_norm_get(&cal));
+}
+
+/*
+Check that when the field norm is updated, the state and covariance
+estimates are scaled accordingly.
+*/
+TEST(TRICAL, NormSetWithScaling) {
+    TRICAL_instance_t cal;
+
+    TRICAL_init(&cal);
+
+    cal.state[0] = 1.0;
+    cal.state[5] = 2.0;
+    cal.state[8] = 3.0;
+
+    cal.state_covariance[0] = 1.0;
+    cal.state_covariance[57] = 2.0;
+    cal.state_covariance[79] = 3.0;
+
+    TRICAL_norm_set(&cal, 2.0f);
+
+    EXPECT_FLOAT_EQ(2.0f, cal.state[0]);
+    EXPECT_FLOAT_EQ(4.0f, cal.state[5]);
+    EXPECT_FLOAT_EQ(6.0f, cal.state[8]);
+
+    EXPECT_FLOAT_EQ(4.0f, cal.state_covariance[0]);
+    EXPECT_FLOAT_EQ(8.0f, cal.state_covariance[57]);
+    EXPECT_FLOAT_EQ(12.0f, cal.state_covariance[79]);
+}
+
+/* Check that the measurement noise can be set and read */
+TEST(TRICAL, NoiseGetSet) {
+    TRICAL_instance_t cal;
+
+    TRICAL_init(&cal);
+    TRICAL_noise_set(&cal, 2.0f);
+    EXPECT_FLOAT_EQ(2.0f, TRICAL_noise_get(&cal));
+}
+
+/* Check that the measurement count can be read */
+TEST(TRICAL, MeasurementCountGet) {
+    TRICAL_instance_t cal;
+
+    TRICAL_init(&cal);
+    cal.measurement_count = 15;
+    EXPECT_EQ(15, TRICAL_measurement_count_get(&cal));
+}
+
+/*
+Check that estimate update works with a series of measurements that should
+result in the identity matrix with zero bias
+*/
+TEST(TRICAL, EstimateUpdateIdentity) {
+    TRICAL_instance_t cal;
+
+    TRICAL_init(&cal);
+
+    float measurement[3];
+    unsigned int i;
+
+    for (i = 0; i < 100; i++) {
+        measurement[0] = 1.0;
+        measurement[1] = 0.0;
+        measurement[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement);
+
+        measurement[0] = 0.0;
+        measurement[1] = 1.0;
+        measurement[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement);
+
+        measurement[0] = 0.0;
+        measurement[1] = 0.0;
+        measurement[2] = 1.0;
+        TRICAL_estimate_update(&cal, measurement);
+
+        measurement[0] = -1.0;
+        measurement[1] = 0.0;
+        measurement[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement);
+
+        measurement[0] = 0.0;
+        measurement[1] = -1.0;
+        measurement[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement);
+
+        measurement[0] = 0.0;
+        measurement[1] = 0.0;
+        measurement[2] = -1.0;
+        TRICAL_estimate_update(&cal, measurement);
+    }
+
+    float bias_estimate[3], scale_estimate[9];
+    TRICAL_estimate_get(&cal, bias_estimate, scale_estimate);
+    EXPECT_NEAR(0.0, bias_estimate[0], 2e-2);
+    EXPECT_NEAR(0.0, bias_estimate[1], 2e-2);
+    EXPECT_NEAR(0.0, bias_estimate[2], 2e-2);
+
+    EXPECT_NEAR(0.0, scale_estimate[0], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[1], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[2], 2e-2);
+
+    EXPECT_NEAR(0.0, scale_estimate[3], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[4], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[5], 2e-2);
+
+    EXPECT_NEAR(0.0, scale_estimate[6], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[7], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[8], 2e-2);
+}
+
+/*
+Check that estimate update works with a series of measurements that should
+result in the identity matrix with a bias in the positive X axis
+*/
+TEST(TRICAL, EstimateUpdateBias) {
+    TRICAL_instance_t cal;
+
+    TRICAL_init(&cal);
+
+    float measurement[3];
+    unsigned int i;
+
+    for (i = 0; i < 100; i++) {
+        measurement[0] = 2.0;
+        measurement[1] = 0.0;
+        measurement[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement);
+
+        measurement[0] = 1.0;
+        measurement[1] = 1.0;
+        measurement[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement);
+
+        measurement[0] = 1.0;
+        measurement[1] = 0.0;
+        measurement[2] = 1.0;
+        TRICAL_estimate_update(&cal, measurement);
+
+        measurement[0] = 0.0;
+        measurement[1] = 0.0;
+        measurement[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement);
+
+        measurement[0] = 1.0;
+        measurement[1] = -1.0;
+        measurement[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement);
+
+        measurement[0] = 1.0;
+        measurement[1] = 0.0;
+        measurement[2] = -1.0;
+        TRICAL_estimate_update(&cal, measurement);
+    }
+
+    float bias_estimate[3], scale_estimate[9];
+    TRICAL_estimate_get(&cal, bias_estimate, scale_estimate);
+    EXPECT_NEAR(1.0, bias_estimate[0], 2e-2);
+    EXPECT_NEAR(0.0, bias_estimate[1], 2e-2);
+    EXPECT_NEAR(0.0, bias_estimate[2], 2e-2);
+
+    EXPECT_NEAR(0.0, scale_estimate[0], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[1], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[2], 2e-2);
+
+    EXPECT_NEAR(0.0, scale_estimate[3], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[4], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[5], 2e-2);
+
+    EXPECT_NEAR(0.0, scale_estimate[6], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[7], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[8], 2e-2);
+}
+
+/* Check that state estimates can be accessed */
+TEST(TRICAL, EstimateGet) {
+    TRICAL_instance_t cal;
+
+    TRICAL_init(&cal);
+    cal.state[0] = 3.0;
+    cal.state[1] = 2.0;
+    cal.state[2] = 1.0;
+    cal.state[3] = 1.0;
+    cal.state[4] = 0.5;
+    cal.state[5] = 0.1;
+    cal.state[6] = 1.0;
+    cal.state[7] = 0.5;
+    cal.state[8] = 1.0;
+
+    float bias_estimate[3], scale_estimate[9];
+    TRICAL_estimate_get(&cal, bias_estimate, scale_estimate);
+    EXPECT_FLOAT_EQ(3.0, bias_estimate[0]);
+    EXPECT_FLOAT_EQ(2.0, bias_estimate[1]);
+    EXPECT_FLOAT_EQ(1.0, bias_estimate[2]);
+
+    EXPECT_FLOAT_EQ(1.0, scale_estimate[0]);
+    EXPECT_FLOAT_EQ(0.5, scale_estimate[1]);
+    EXPECT_FLOAT_EQ(0.1, scale_estimate[2]);
+
+    EXPECT_FLOAT_EQ(0.5, scale_estimate[3]);
+    EXPECT_FLOAT_EQ(1.0, scale_estimate[4]);
+    EXPECT_FLOAT_EQ(0.5, scale_estimate[5]);
+
+    EXPECT_FLOAT_EQ(0.1, scale_estimate[6]);
+    EXPECT_FLOAT_EQ(0.5, scale_estimate[7]);
+    EXPECT_FLOAT_EQ(1.0, scale_estimate[8]);
+}
+
+/* Check that state and covariance estimates can be accessed */
+TEST(TRICAL, EstimateGetExt) {
+    TRICAL_instance_t cal;
+
+    TRICAL_init(&cal);
+
+    cal.state[0] = 3.0;
+    cal.state[1] = 2.0;
+    cal.state[2] = 1.0;
+    cal.state[3] = 1.0;
+    cal.state[4] = 0.5;
+    cal.state[5] = 0.1;
+    cal.state[6] = 1.0;
+    cal.state[7] = 0.5;
+    cal.state[8] = 1.0;
+
+    cal.state_covariance[0] = 10.0;
+    cal.state_covariance[10] = 20.0;
+    cal.state_covariance[20] = 30.0;
+    cal.state_covariance[30] = 40.0;
+    cal.state_covariance[40] = 50.0;
+    cal.state_covariance[50] = 60.0;
+    cal.state_covariance[60] = 70.0;
+    cal.state_covariance[70] = 80.0;
+    cal.state_covariance[80] = 90.0;
+
+    float bias_estimate[3], scale_estimate[9], bias_estimate_variance[3],
+          scale_estimate_variance[9];
+    TRICAL_estimate_get_ext(&cal, bias_estimate, scale_estimate,
+                            bias_estimate_variance, scale_estimate_variance);
+
+    EXPECT_FLOAT_EQ(3.0, bias_estimate[0]);
+    EXPECT_FLOAT_EQ(2.0, bias_estimate[1]);
+    EXPECT_FLOAT_EQ(1.0, bias_estimate[2]);
+
+    EXPECT_FLOAT_EQ(1.0, scale_estimate[0]);
+    EXPECT_FLOAT_EQ(0.5, scale_estimate[1]);
+    EXPECT_FLOAT_EQ(0.1, scale_estimate[2]);
+
+    EXPECT_FLOAT_EQ(0.5, scale_estimate[3]);
+    EXPECT_FLOAT_EQ(1.0, scale_estimate[4]);
+    EXPECT_FLOAT_EQ(0.5, scale_estimate[5]);
+
+    EXPECT_FLOAT_EQ(0.1, scale_estimate[6]);
+    EXPECT_FLOAT_EQ(0.5, scale_estimate[7]);
+    EXPECT_FLOAT_EQ(1.0, scale_estimate[8]);
+
+    EXPECT_FLOAT_EQ(10.0, bias_estimate_variance[0]);
+    EXPECT_FLOAT_EQ(20.0, bias_estimate_variance[1]);
+    EXPECT_FLOAT_EQ(30.0, bias_estimate_variance[2]);
+
+    EXPECT_FLOAT_EQ(40.0, scale_estimate_variance[0]);
+    EXPECT_FLOAT_EQ(50.0, scale_estimate_variance[1]);
+    EXPECT_FLOAT_EQ(60.0, scale_estimate_variance[2]);
+
+    EXPECT_FLOAT_EQ(50.0, scale_estimate_variance[3]);
+    EXPECT_FLOAT_EQ(70.0, scale_estimate_variance[4]);
+    EXPECT_FLOAT_EQ(80.0, scale_estimate_variance[5]);
+
+    EXPECT_FLOAT_EQ(60.0, scale_estimate_variance[6]);
+    EXPECT_FLOAT_EQ(80.0, scale_estimate_variance[7]);
+    EXPECT_FLOAT_EQ(90.0, scale_estimate_variance[8]);
+}
+
+/*
+Check that measurement calibration can be performed based on the instance
+state.
+
+This mirrors Filter.CalibrateFull.
+*/
+TEST(TRICAL, Calibrate) {
+    TRICAL_instance_t cal;
+
+    TRICAL_init(&cal);
+    cal.state[0] = 3.0;
+    cal.state[1] = 2.0;
+    cal.state[2] = 1.0;
+    cal.state[3] = 1.0;
+    cal.state[4] = 0.5;
+    cal.state[5] = 0.1;
+    cal.state[6] = 1.0;
+    cal.state[7] = 0.5;
+    cal.state[8] = 1.0;
+
+    float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
+    TRICAL_measurement_calibrate(&cal, measurement, result);
+    EXPECT_FLOAT_EQ(-3.8, result[0]);
+    EXPECT_FLOAT_EQ(0.0, result[1]);
+    EXPECT_FLOAT_EQ(3.8, result[2]);
 }
