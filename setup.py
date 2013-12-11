@@ -6,11 +6,11 @@ import distutils.command.build_py
 from distutils.core import setup
 
 
-class build_cukf(distutils.command.build_py.build_py):
+class build_trical(distutils.command.build_py.build_py):
     description = """Build the TRICAL shared library"""
 
     def run(self):
-        subprocess.call("cmake . && make && cp -r c ./python/TRICAL/",
+        subprocess.call("cmake . && make && cp libTRICAL.* ./python/TRICAL/",
                         shell=True,
                         cwd=os.path.dirname(os.path.abspath(__file__)))
         self.data_files = self.get_data_files()
@@ -29,7 +29,7 @@ for tri-axial field sensors (e.g. magnetometers).""",
     package_dir={"": "python"},
     packages=["TRICAL"],
     package_data={
-        "TRICAL": ["c/TRICAL.dll", "c/libTRICAL.so", "c/libTRICAL.dylib"]
+        "TRICAL": ["TRICAL.dll", "libTRICAL.so", "libTRICAL.dylib"]
     },
     license="MIT License",
     classifiers=[
@@ -39,5 +39,5 @@ for tri-axial field sensors (e.g. magnetometers).""",
         "Programming Language :: Python",
         "Topic :: Software Development :: Libraries"
     ],
-    cmdclass={"build_py": build_cukf}
+    cmdclass={"build_py": build_trical}
 )

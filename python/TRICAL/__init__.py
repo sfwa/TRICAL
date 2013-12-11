@@ -61,7 +61,7 @@ def _init():
     global _TRICAL
 
     # TODO: search properly
-    lib = os.path.join(os.path.dirname(__file__), "c", "libTRICAL.dylib")
+    lib = os.path.join(os.path.dirname(__file__), "libTRICAL.dylib")
     _TRICAL = cdll.LoadLibrary(lib)
 
     # Set up the _Instance structure based on the definition in TRICAL.h

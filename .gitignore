@@ -5,3 +5,10 @@ cmake_install.cmake
 install_manifest.txt
 *.pyc
 .DS_Store
+*.cmake
+build/
+*.dylib
+*.so
+*.a
+test/src/
+test/tmp/

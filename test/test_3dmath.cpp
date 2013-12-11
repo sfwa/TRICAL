@@ -21,10 +21,6 @@ SOFTWARE.
 */
 
 #include <gtest/gtest.h>
-#include <cstdint>
-#include <cstdlib>
-#include <cstdbool>
-#include <cassert>
 #include <cmath>
 #include <cfloat>
 
