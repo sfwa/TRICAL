@@ -56,36 +56,11 @@ void TRICAL_init(TRICAL_instance_t *instance) {
 
 /*
 TRICAL_norm_set:
-Sets the expected field norm (magnitude) of `instance` to `norm`. If `norm`
-differs from the instance's current field norm, all estimates are multiplied
-by the ratio of new norm:old norm.
+Sets the expected field norm (magnitude) of `instance` to `norm`.
 */
 void TRICAL_norm_set(TRICAL_instance_t *instance, float norm) {
     assert(instance);
-    assert(norm > 0.0f);
-
-    if (fabs(norm - instance->field_norm) < FLT_EPSILON) {
-        return;
-    }
-
-    /*
-    Since the new norm differs from the current norm, we need to re-scale our
-    state and covariance estimates accordingly.
-    */
-    float scale = norm / instance->field_norm;
-    unsigned int i;
-
-    #pragma MUST_ITERATE(9, 9)
-    for (i = 0; i < TRICAL_STATE_DIM; i++) {
-        instance->state[i] *= scale;
-    }
-
-    scale = (norm * norm) / (instance->field_norm * instance->field_norm);
-
-    #pragma MUST_ITERATE(81, 81)
-    for (i = 0; i < TRICAL_STATE_DIM * TRICAL_STATE_DIM; i++) {
-        instance->state_covariance[i] *= scale;
-    }
+    assert(norm > FLT_EPSILON);
 
     instance->field_norm = norm;
 }
@@ -106,7 +81,7 @@ Sets the standard deviation in measurement supplied to `instance` to `noise`.
 */
 void TRICAL_noise_set(TRICAL_instance_t *instance, float noise) {
     assert(instance);
-    assert(noise > 0.0f);
+    assert(noise > FLT_EPSILON);
 
     instance->measurement_noise = noise;
 }

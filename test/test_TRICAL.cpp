@@ -44,34 +44,6 @@ TEST(TRICAL, NormGetSet) {
     EXPECT_FLOAT_EQ(2.0f, TRICAL_norm_get(&cal));
 }
 
-/*
-Check that when the field norm is updated, the state and covariance
-estimates are scaled accordingly.
-*/
-TEST(TRICAL, NormSetWithScaling) {
-    TRICAL_instance_t cal;
-
-    TRICAL_init(&cal);
-
-    cal.state[0] = 1.0;
-    cal.state[5] = 2.0;
-    cal.state[8] = 3.0;
-
-    cal.state_covariance[0] = 1.0;
-    cal.state_covariance[57] = 2.0;
-    cal.state_covariance[79] = 3.0;
-
-    TRICAL_norm_set(&cal, 2.0f);
-
-    EXPECT_FLOAT_EQ(2.0f, cal.state[0]);
-    EXPECT_FLOAT_EQ(4.0f, cal.state[5]);
-    EXPECT_FLOAT_EQ(6.0f, cal.state[8]);
-
-    EXPECT_FLOAT_EQ(4.0f, cal.state_covariance[0]);
-    EXPECT_FLOAT_EQ(8.0f, cal.state_covariance[57]);
-    EXPECT_FLOAT_EQ(12.0f, cal.state_covariance[79]);
-}
-
 /* Check that the measurement noise can be set and read */
 TEST(TRICAL, NoiseGetSet) {
     TRICAL_instance_t cal;
