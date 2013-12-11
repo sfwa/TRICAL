@@ -21,10 +21,6 @@ SOFTWARE.
 */
 
 #include <gtest/gtest.h>
-#include <cstdint>
-#include <cstdlib>
-#include <cstdbool>
-#include <cassert>
 
 /* C++ complains about the C99 'restrict' qualifier. Just ignore it. */
 #define restrict
