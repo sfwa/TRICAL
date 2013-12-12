@@ -143,6 +143,8 @@ python -m TRICAL 1.0 1e-6 html < /path/to/input.csv > /path/to/output.html
 The HTML data is written to `stdout`, and can be opened in any
 WebGL-supporting browser (Chrome or Firefox, Safari with an option enabled).
 
+[Here's an example.](http://au.tono.my/log/trical-visualisation.html) (6.6MiB)
+
 
 ## Compiling with Texas Instrumets Code Composer Studio 5
 
