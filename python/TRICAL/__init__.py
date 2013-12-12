@@ -181,35 +181,58 @@ class Instance(object):
         return tuple(calibrated_measurement[0:3])
 
 
-if __name__ == "__main__":
-    # Exit if incorrect arguments have been passed
-    if len(sys.argv) != 3:
-        print "Usage: python -m TRICAL.__init__ <field norm> <noise>"
-        sys.exit(1)
+def _squared_norm(v):
+    return v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 
-    # Set up the instance
-    instance = Instance(field_norm=float(sys.argv[1]),
-                        measurement_noise=float(sys.argv[2]))
 
-    # Run calibration for each line in stdin, and print the calibrated
-    # measurement to stdout
-    for line in sys.stdin:
-        measurement = map(float, line.strip("\n\r\t ").split(","))
-        if len(measurement) != 3:
-            continue
+def generate_html_viz(instance, samples):
+    """
+    Generate a WebGL visualisation of
+    """
+    import math
+    import pkg_resources
 
+    raw_data = samples
+    iteratively_calibrated_data = []
+    squared_magnitude = 0.0
+
+    # Iterate over the samples and generate the iteratively calibrated data
+    for measurement in samples:
         instance.update(measurement)
         calibrated_measurement = instance.calibrate(measurement)
+        iteratively_calibrated_data.append(calibrated_measurement)
 
-        out = ",".join(("%.7f" % m) for m in calibrated_measurement)
-        sys.stdout.write(out + "\n")
-        sys.stdout.flush()
+        # Update the maximum magnitude seen
+        squared_magnitude = max(squared_magnitude, _squared_norm(measurement))
+        squared_magnitude = max(squared_magnitude,
+                                _squared_norm(calibrated_measurement))
 
-    # Display a final calibration summary once done
-    out =  "################# CALIBRATION #################\n"
-    out += " b = [%10.7f, %10.7f, %10.7f]\n" % instance.bias
-    out += " D = [ [ %10.7f, %10.7f, %10.7f ]\n" % instance.scale[0:3]
-    out += "       [ %10.7f, %10.7f, %10.7f ]\n" % instance.scale[3:6]
-    out += "       [ %10.7f, %10.7f, %10.7f ] ]\n" % instance.scale[6:9]
-    sys.stderr.write(out)
-    sys.stderr.flush()
+    # And now insert them into the appropriate part of the HTML. Try the
+    # pkg_resources way, but if the package hasn't actually been installed
+    # then look for it in the same directory as this file
+    try:
+        html_path = pkg_resources.resource_filename("TRICAL", "viz.html")
+        html = open(html_path, "rb").read()
+    except IOError:
+        html_path = os.path.join(os.path.dirname(__file__), "viz.html")
+        html = open(html_path, "rb").read()
+
+    # Insert the visualisation data -- output measurements as a single array
+    # of points
+    raw_points = ",\n".join(",".join("%.4f" % v for v in measurement)
+                            for measurement in raw_data)
+    iteratively_calibrated_points = ",\n".join(",".join(
+        "%.4f" % v for v in measurement) for measurement in
+        iteratively_calibrated_data)
+
+    html = html.replace("{{raw}}", "[" + raw_points + "]")
+    html = html.replace("{{iterativelyCalibrated}}",
+                        "[" + iteratively_calibrated_points + "]")
+
+    # TODO: maybe insert the calibration estimate as well?
+    html = html.replace("{{magnitude}}",
+                        "%.3f" % math.sqrt(squared_magnitude))
+    html = html.replace("{{fieldNorm}}",
+                        "%.3f" % instance._instance.field_norm)
+
+    return html

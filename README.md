@@ -118,6 +118,31 @@ Python interface (the `TRICAL` module) in your `site-packages` directory.
 Alternatively, just run `pip install https://github.com/sfwa/TRICAL/archive/master.zip#egg=TRICAL-1.0.0`
 to download and install.
 
+Once the module has been installed, you can run the TRICAL batch calibration
+script as follows:
+
+```
+python -m TRICAL 1.0 1e-6 < /path/to/input.csv > /path/to/output.csv
+```
+
+(Where `1.0` is the field norm, and `1e-6` is the measurement noise. Change
+those values as appropriate.)
+
+The script reads 3 comma-separated input values per `\n`-terminated line from
+`stdin`, and writes 3 comma-separated calibrated output values to `stdout` per
+input line read. Upon completion (EOF on `stdin`), the script outputs the
+calibration estimate to `stderr`.
+
+You can also generate a WebGL point cloud visualisation of the data by
+including `html` after the command:
+
+```
+python -m TRICAL 1.0 1e-6 html < /path/to/input.csv > /path/to/output.html
+```
+
+The HTML data is written to `stdout`, and can be opened in any
+WebGL-supporting browser (Chrome or Firefox, Safari with an option enabled).
+
 
 ## Compiling with Texas Instrumets Code Composer Studio 5
 
