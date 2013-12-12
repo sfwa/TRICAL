@@ -14,7 +14,7 @@ able to provide iterative calibration estimates.
 ## Overview
 
 TRICAL is configured with an expected field norm (defaulting to 1.0). In the
-case of a magnetometer, this would be the magnitude of *B* at its current
+case of a magnetometer, this would be the magnitude of _B_ at its current
 location (as output by the WMM, for example).
 
 The input to the calibration process is a sequence of 3-vectors representing
@@ -53,36 +53,37 @@ estimate, which you can access using `TRICAL_estimate_get(…)`.
 To apply the current calibration estimate to a measurement, just call
 `TRICAL_measurement_calibrate(…)`.
 
-    #include "TRICAL.h"
+```c
+#include "TRICAL.h"
 
-    TRICAL_instance_t global_instance;
+TRICAL_instance_t global_instance;
+
+/* ... */
+
+void your_init_proc(void) {
+    /* ... */
+
+    TRICAL_init(&global_instance);
+    TRICAL_norm_set(&global_instance, 60.0);
+    TRICAL_noise_set(&global_instance, 1.5);
+}
+
+void your_sensor_read_proc(void) {
+    float sensor_reading[3];
 
     /* ... */
 
-    void your_init_proc(void) {
-        /* ... */
+    TRICAL_estimate_update(&global_instance, sensor_reading);
 
-        TRICAL_init(&global_instance);
-        TRICAL_norm_set(&global_instance, 60.0);
-        TRICAL_noise_set(&global_instance, 1.5);
-    }
+    /* ... */
 
-    void your_sensor_read_proc(void) {
-        float sensor_reading[3];
+    float calibrated_reading[3];
+    TRICAL_measurement_calibrate(&global_instance, sensor_reading,
+                                 calibrated_reading);
 
-        /* ... */
-
-        TRICAL_estimate_update(&global_instance, sensor_reading);
-
-        /* ... */
-
-        float calibrated_reading[3];
-        TRICAL_measurement_calibrate(&global_instance, sensor_reading,
-                                     calibrated_reading);
-
-        /* Now use calibrated_reading as an input to your AHRS or whatever */
-    }
-
+    /* Now use calibrated_reading as an input to your AHRS or whatever */
+}
+```
 
 ## Build instructions
 
