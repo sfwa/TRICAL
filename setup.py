@@ -23,7 +23,7 @@ setup(
     author="Ben Dyer",
     author_email="",
     version="1.0.0",
-    description="""UKF-based iterative scale and bias calibration algorithm \
+    description="""UKF-based real-time scale and bias calibration algorithm \
 for tri-axial field sensors (e.g. magnetometers).""",
     long_description=open("README.md").read(),
     package_dir={"": "python"},

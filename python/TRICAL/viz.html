@@ -1111,7 +1111,7 @@ fragmentShader:"uniform vec3 color;\nuniform sampler2D map;\nuniform float opaci
         TRICAL = {
             data: {
                 raw: null,
-                iterativelyCalibrated: null
+                calibrated: null
             },
             views: {
                 perspective: {
@@ -1152,7 +1152,7 @@ fragmentShader:"uniform vec3 color;\nuniform sampler2D map;\nuniform float opaci
                 background: new THREE.Color().setRGB(0.8, 0.8, 0.8),
                 label: new THREE.Color().setRGB(1.0, 1.0, 1.0),
                 rawPoints: '0,0,0',
-                iterativelyCalibratedPoints: '255,0,0'
+                calibratedPoints: '255,0,0'
             },
             labels: [
                 /*
@@ -1208,7 +1208,7 @@ fragmentShader:"uniform vec3 color;\nuniform sampler2D map;\nuniform float opaci
                 }
 
                 /* Set up the particle systems for each data series */
-                for (data = ["raw", "iterativelyCalibrated"], i = 0;
+                for (data = ["raw", "calibrated"], i = 0;
                      i < data.length; i++) {
                     TRICAL.assert(TRICAL.data[data[i]].length % 3 === 0,
                               "init: data length is not a multiple of 3");
@@ -1525,7 +1525,7 @@ fragmentShader:"uniform vec3 color;\nuniform sampler2D map;\nuniform float opaci
         TRICAL.data.magnitude = {{magnitude}};
         TRICAL.data.fieldNorm = {{fieldNorm}};
         TRICAL.data.raw = {{raw}};
-        TRICAL.data.iterativelyCalibrated = {{iterativelyCalibrated}};
+        TRICAL.data.calibrated = {{calibrated}};
 
         /* Now start TRICAL */
         TRICAL.init();

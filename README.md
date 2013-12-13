@@ -1,12 +1,12 @@
 # TRICAL
 
-TRICAL is a UKF-based iterative scale and bias calibration algorithm for
+TRICAL is a UKF-based real-time scale and bias calibration algorithm for
 tri-axial field sensors (e.g. magnetometers).
 
 The implementation is based on the unscented filter formulation described in
 [Real-Time Attitude-Independent Three-Axis Magnetometer Calibration][1];
 performance is similar to TWOSTEP but it's less computationally intensive, and
-able to provide iterative calibration estimates.
+able to provide real-time calibration estimates.
 
 [1]: http://www.acsu.buffalo.edu/~johnc/mag_cal05.pdf
 

@@ -31,8 +31,8 @@ This is a simple Python interface wrapper around TRICAL, designed more as a
 convenient interface for tests than anything else.
 
 If run directly (i.e. `python -m TRICAL`), we read expect comma-separated
-readings on stdin (3 values per line, ending with \\n), and write iteratively
-calibrated values on stdout in the same format.
+readings on stdin (3 values per line, ending with \\n), and write calibrated
+values on stdout in the same format.
 """
 
 
@@ -221,13 +221,11 @@ def generate_html_viz(instance, samples):
     # of points
     raw_points = ",\n".join(",".join("%.4f" % v for v in measurement)
                             for measurement in raw_data)
-    iteratively_calibrated_points = ",\n".join(",".join(
-        "%.4f" % v for v in measurement) for measurement in
-        iteratively_calibrated_data)
+    calibrated_points = ",\n".join(",".join(
+        "%.4f" % v for v in measurement) for measurement in calibrated_data)
 
     html = html.replace("{{raw}}", "[" + raw_points + "]")
-    html = html.replace("{{iterativelyCalibrated}}",
-                        "[" + iteratively_calibrated_points + "]")
+    html = html.replace("{{calibrated}}", "[" + calibrated_points + "]")
 
     # TODO: maybe insert the calibration estimate as well?
     html = html.replace("{{magnitude}}",
