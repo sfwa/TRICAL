@@ -55,6 +55,26 @@ void TRICAL_init(TRICAL_instance_t *instance) {
 }
 
 /*
+TRICAL_reset:
+Resets the state and state covariance of `instance`.
+*/
+void TRICAL_reset(TRICAL_instance_t *instance) {
+    assert(instance);
+
+    memset(instance->state, 0, sizeof(instance->state));
+    memset(instance->state_covariance, 0, sizeof(instance->state_covariance));
+
+    /*
+    Set the state covariance diagonal to a small value, so that we can run the
+    Cholesky decomposition without blowing up
+    */
+    unsigned int i;
+    for (i = 0; i < TRICAL_STATE_DIM * TRICAL_STATE_DIM; i += 10) {
+        instance->state_covariance[i] = 1e-2f;
+    }
+}
+
+/*
 TRICAL_norm_set:
 Sets the expected field norm (magnitude) of `instance` to `norm`.
 */

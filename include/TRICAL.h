@@ -49,6 +49,12 @@ reset that instance to its default state.
 void TRICAL_init(TRICAL_instance_t *instance);
 
 /*
+TRICAL_reset:
+Resets the state and state covariance of `instance`.
+*/
+void TRICAL_reset(TRICAL_instance_t *instance);
+
+/*
 TRICAL_norm_set:
 Sets the expected field norm (magnitude) of `instance` to `norm`. If `norm`
 differs from the instance's current field norm, all estimates are multiplied
