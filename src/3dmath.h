@@ -125,34 +125,6 @@ static inline double recip(double b) {
 
 #endif
 
-static void matrix_multiply_f(float *restrict C, const float B[],
-const float A[], const size_t AR, const size_t AC, const size_t BR,
-const size_t BC, const float mul) {
-    /*
-    Calculate C = AB, where A has AN rows and AM columns, and B has BN rows
-    and BM columns. C must be AN x BM.
-    */
-    assert(A && B && C && AR == BC);
-    _nassert((size_t)C % 4 == 0);
-    _nassert((size_t)B % 4 == 0);
-    _nassert((size_t)A % 4 == 0);
-
-    size_t i, j, k;
-    #pragma MUST_ITERATE(1,24)
-    for (i = 0; i < AC; i++) {
-        #pragma MUST_ITERATE(1,24)
-        for (j = 0; j < BR; j++) {
-            float t = 0.0;
-            #pragma MUST_ITERATE(1,24)
-            for (k = 0; k < AR; k++) {
-                t += A[i * AR + k] * B[k * BR + j];
-            }
-
-            C[i * BR + j] = t * mul;
-        }
-    }
-}
-
 static void matrix_cholesky_decomp_scale_f(unsigned int dim, float L[],
 const float A[], const float mul) {
     assert(L && A && dim);

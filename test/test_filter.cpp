@@ -36,9 +36,9 @@ during measurement calibration.
 TEST(Filter, CalibrateIdentity) {
     float state[9] = {
         0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0,
-             0.0, 0.0,
-                  0.0
+        1.0, 0.0, 0.0,
+             1.0, 0.0,
+                  1.0
     };
     float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
 
@@ -58,9 +58,9 @@ distortion only.
 TEST(Filter, CalibrateBias) {
     float state[9] = {
         1.0, 2.0, 3.0,
-        0.0, 0.0, 0.0,
-             0.0, 0.0,
-                  0.0
+        1.0, 0.0, 0.0,
+             1.0, 0.0,
+                  1.0
     };
     float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
 
@@ -71,12 +71,7 @@ TEST(Filter, CalibrateBias) {
 }
 
 /*
-Test measurement calibration with an orthogonal scale factor matrix -- this
-is added to the identity matrix during the calculation, so the actual scale
-factor matrix used will be:
-2  0  0
-0  2  0
-0  0  2
+Test measurement calibration with an orthogonal scale factor matrix.
 
 This test would permit calibration for soft iron distortion of the magnetic
 field, as well as scale factor error in the magnetometer.
@@ -84,9 +79,9 @@ field, as well as scale factor error in the magnetometer.
 TEST(Filter, CalibrateOrthogonal) {
     float state[9] = {
         0.0, 0.0, 0.0,
-        1.0, 0.0, 0.0,
-             1.0, 0.0,
-                  1.0
+        2.0, 0.0, 0.0,
+             2.0, 0.0,
+                  2.0
     };
     float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
 
@@ -104,9 +99,9 @@ factor error and axis misalignment in the sensor.
 TEST(Filter, CalibrateSymmetric) {
     float state[9] = {
         0.0, 0.0, 0.0,
-        1.0, 0.5, 0.1,
-             1.0, 0.5,
-                  1.0
+        2.0, 0.5, 0.1,
+             2.0, 0.5,
+                  2.0
     };
     float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
 
@@ -128,9 +123,9 @@ calibration step, and is easier to do elsewhere -- e.g. by measurement.)
 TEST(Filter, CalibrateFull) {
     float state[9] = {
         3.0, 2.0, 1.0,
-        1.0, 0.5, 0.1,
-             1.0, 0.5,
-                  1.0
+        2.0, 0.5, 0.1,
+             2.0, 0.5,
+                  2.0
     };
     float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
 
@@ -148,9 +143,9 @@ implementation to generate a measurement estimate for each sigma point.
 TEST(Filter, MeasurementReduction) {
     float state[9] = {
         0.0, 0.0, 0.0,
-        1.0, 0.5, 0.1,
-             1.0, 0.5,
-                  1.0
+        2.0, 0.5, 0.1,
+             2.0, 0.5,
+                  2.0
     };
     float measurement[3] = { 1.0, 2.0, 3.0 }, result;
 

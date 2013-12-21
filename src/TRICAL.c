@@ -44,6 +44,9 @@ void TRICAL_init(TRICAL_instance_t *instance) {
     instance->field_norm = 1.0f;
     instance->measurement_noise = 1e-6f;
 
+    /* Set the scale factor matrix to the 3x3 identity */
+    instance->state[3] = instance->state[6] = instance->state[8] = 1.0f;
+
     /*
     Set the state covariance diagonal to a small value, so that we can run the
     Cholesky decomposition without blowing up
@@ -63,6 +66,9 @@ void TRICAL_reset(TRICAL_instance_t *instance) {
 
     memset(instance->state, 0, sizeof(instance->state));
     memset(instance->state_covariance, 0, sizeof(instance->state_covariance));
+
+    /* Set the scale factor matrix to the 3x3 identity */
+    instance->state[3] = instance->state[6] = instance->state[8] = 1.0f;
 
     /*
     Set the state covariance diagonal to a small value, so that we can run the

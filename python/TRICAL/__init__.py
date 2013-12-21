@@ -53,7 +53,7 @@ class _Instance(Structure):
 
 def _init():
     """
-    Loads the TRICAL library and sets up the cyptes interface.
+    Loads the TRICAL library and sets up the ctypes interface.
 
     Called automatically the first time a Python instance is created.
     """
@@ -143,7 +143,7 @@ class Instance(object):
 
         # Initialize the Python-accessible calibration estimate
         self.bias = (0.0, 0.0, 0.0)
-        self.scale = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        self.scale = (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0)
         self.measurement_count = 0
 
     def update(self, measurement):

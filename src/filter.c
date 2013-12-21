@@ -119,41 +119,24 @@ copies the result to `calibrated_measurement`. The `measurement` and
 `calibrated_measurement` parameters may be pointers to the same vector.
 
 Implements
-B' = (I_{3x3} + D)B - b
+B' = DB - b
 
-where B' is the calibrated measurement, I_{3x3} is the 3x3 identity matrix,
-D is the (symmetric) scale calibration matrix, B is the raw measurement, and
-b is the bias vector.
+where B' is the calibrated measurement, D is the (symmetric) scale calibration
+matrix, B is the raw measurement, and b is the bias vector.
 */
 void _trical_measurement_calibrate(float state[TRICAL_STATE_DIM],
 float measurement[3], float calibrated_measurement[3]) {
     assert(state && measurement && calibrated_measurement);
 
-    float temp_v[3], temp_mat[9];
-    temp_v[0] = measurement[0] - state[0];
-    temp_v[1] = measurement[1] - state[1];
-    temp_v[2] = measurement[2] - state[2];
+    float v[3], *restrict s = state, *restrict c = calibrated_measurement;
+    v[0] = measurement[0] - s[0];
+    v[1] = measurement[1] - s[1];
+    v[2] = measurement[2] - s[2];
 
-    /*
-    Get a 3x3 matrix from the instance state vector; same approach as
-    TRICAL_estimate_get above but a bit less verbose.
-
-    We add 1s along the diagonal because the function implemented multiplies
-    (I + D) by B.
-    */
-    temp_mat[0] = state[3] + 1.0f;
-    temp_mat[3] = temp_mat[1] = state[4];
-    temp_mat[6] = temp_mat[2] = state[5];
-    temp_mat[4] = state[6] + 1.0f;
-    temp_mat[7] = temp_mat[5] = state[7];
-    temp_mat[8] = state[8] + 1.0f;
-
-    /*
-    Multiply the de-biased measurement by the scale estimate matrix to get
-    the result.
-    */
-    matrix_multiply_f(
-        calibrated_measurement, temp_mat, temp_v, 3, 1, 3, 3, 1.0f);
+    /* Symmetric 3x3 matrix multiply */
+    c[0] = v[0] * s[3] + v[1] * s[4] + v[2] * s[5];
+    c[1] = v[0] * s[4] + v[1] * s[6] + v[2] * s[7];
+    c[2] = v[0] * s[5] + v[1] * s[7] + v[2] * s[8];
 }
 
 /*
