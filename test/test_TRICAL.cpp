@@ -112,17 +112,17 @@ TEST(TRICAL, EstimateUpdateIdentity) {
     EXPECT_NEAR(0.0, bias_estimate[1], 2e-2);
     EXPECT_NEAR(0.0, bias_estimate[2], 2e-2);
 
-    EXPECT_NEAR(1.0, scale_estimate[0], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[0], 2e-2);
     EXPECT_NEAR(0.0, scale_estimate[1], 2e-2);
     EXPECT_NEAR(0.0, scale_estimate[2], 2e-2);
 
     EXPECT_NEAR(0.0, scale_estimate[3], 2e-2);
-    EXPECT_NEAR(1.0, scale_estimate[4], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[4], 2e-2);
     EXPECT_NEAR(0.0, scale_estimate[5], 2e-2);
 
     EXPECT_NEAR(0.0, scale_estimate[6], 2e-2);
     EXPECT_NEAR(0.0, scale_estimate[7], 2e-2);
-    EXPECT_NEAR(1.0, scale_estimate[8], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[8], 2e-2);
 }
 
 /*
@@ -175,17 +175,17 @@ TEST(TRICAL, EstimateUpdateBias) {
     EXPECT_NEAR(0.0, bias_estimate[1], 2e-2);
     EXPECT_NEAR(0.0, bias_estimate[2], 2e-2);
 
-    EXPECT_NEAR(1.0, scale_estimate[0], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[0], 2e-2);
     EXPECT_NEAR(0.0, scale_estimate[1], 2e-2);
     EXPECT_NEAR(0.0, scale_estimate[2], 2e-2);
 
     EXPECT_NEAR(0.0, scale_estimate[3], 2e-2);
-    EXPECT_NEAR(1.0, scale_estimate[4], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[4], 2e-2);
     EXPECT_NEAR(0.0, scale_estimate[5], 2e-2);
 
     EXPECT_NEAR(0.0, scale_estimate[6], 2e-2);
     EXPECT_NEAR(0.0, scale_estimate[7], 2e-2);
-    EXPECT_NEAR(1.0, scale_estimate[8], 2e-2);
+    EXPECT_NEAR(0.0, scale_estimate[8], 2e-2);
 }
 
 /* Check that state estimates can be accessed */
@@ -308,7 +308,7 @@ TEST(TRICAL, Calibrate) {
 
     float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
     TRICAL_measurement_calibrate(&cal, measurement, result);
-    EXPECT_FLOAT_EQ(-1.8, result[0]);
+    EXPECT_FLOAT_EQ(-3.8, result[0]);
     EXPECT_FLOAT_EQ(0.0, result[1]);
-    EXPECT_FLOAT_EQ(1.8, result[2]);
+    EXPECT_FLOAT_EQ(3.8, result[2]);
 }

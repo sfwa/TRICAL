@@ -119,10 +119,11 @@ copies the result to `calibrated_measurement`. The `measurement` and
 `calibrated_measurement` parameters may be pointers to the same vector.
 
 Implements
-B' = DB - b
+B' = (I_{3x3} + D)B - b
 
-where B' is the calibrated measurement, D is the (symmetric) scale calibration
-matrix, B is the raw measurement, and b is the bias vector.
+where B' is the calibrated measurement, I_{3x3} is the 3x3 identity matrix,
+D is the (symmetric) scale calibration matrix, B is the raw measurement, and
+b is the bias vector.
 */
 void _trical_measurement_calibrate(float state[TRICAL_STATE_DIM],
 float measurement[3], float calibrated_measurement[3]) {
@@ -134,9 +135,9 @@ float measurement[3], float calibrated_measurement[3]) {
     v[2] = measurement[2] - s[2];
 
     /* Symmetric 3x3 matrix multiply */
-    c[0] = v[0] * s[3] + v[1] * s[4] + v[2] * s[5];
-    c[1] = v[0] * s[4] + v[1] * s[6] + v[2] * s[7];
-    c[2] = v[0] * s[5] + v[1] * s[7] + v[2] * s[8];
+    c[0] = v[0] * (s[3] + 1.0f) + v[1] * s[4] + v[2] * s[5];
+    c[1] = v[0] * s[4] + v[1] * (s[6] + 1.0f) + v[2] * s[7];
+    c[2] = v[0] * s[5] + v[1] * s[7] + v[2] * (s[8] + 1.0f);
 }
 
 /*
