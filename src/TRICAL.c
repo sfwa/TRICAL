@@ -49,7 +49,8 @@ void TRICAL_init(TRICAL_instance_t *instance) {
     Cholesky decomposition without blowing up
     */
     unsigned int i;
-    for (i = 0; i < TRICAL_STATE_DIM * TRICAL_STATE_DIM; i += 10) {
+    for (i = 0; i < TRICAL_STATE_DIM * TRICAL_STATE_DIM;
+            i += (TRICAL_STATE_DIM + 1)) {
         instance->state_covariance[i] = 1e-2f;
     }
 }
@@ -69,7 +70,8 @@ void TRICAL_reset(TRICAL_instance_t *instance) {
     Cholesky decomposition without blowing up
     */
     unsigned int i;
-    for (i = 0; i < TRICAL_STATE_DIM * TRICAL_STATE_DIM; i += 10) {
+    for (i = 0; i < TRICAL_STATE_DIM * TRICAL_STATE_DIM;
+            i += (TRICAL_STATE_DIM + 1)) {
         instance->state_covariance[i] = 1e-2f;
     }
 }
@@ -130,15 +132,16 @@ unsigned int TRICAL_measurement_count_get(TRICAL_instance_t *instance) {
 /*
 TRICAL_estimate_update
 Updates the calibration estimate of `instance` based on the new data in
-`measurement`. Call this function with each reading you receive from your
-sensor.
+`measurement`, and the current field direction estimate `reference_field`.
+Call this function with each reading you receive from your sensor.
 */
 void TRICAL_estimate_update(TRICAL_instance_t *instance,
-float measurement[3]) {
+float measurement[3], float reference_field[3]) {
     assert(instance);
     assert(measurement);
+    assert(reference_field);
 
-    _trical_filter_iterate(instance, measurement);
+    _trical_filter_iterate(instance, measurement, reference_field);
     instance->measurement_count++;
 }
 
@@ -158,31 +161,8 @@ float bias_estimate[3], float scale_estimate[9]) {
     /* Copy bias estimate from state[0:3] to the destination vector */
     memcpy(bias_estimate, instance->state, 3 * sizeof(float));
 
-    /*
-    Now copy scale estimate/scale estimate covariance. Since the scale matrix
-    is symmetric, we only store the upper triangle values in the state vector,
-    like this:
-    3  4  5
-       6  7
-          8
-
-    So, on output, we need to copy values 4, 5 and 7 to two locations:
-
-    3  4  5
-    4  6  7
-    5  7  8
-    */
-    scale_estimate[0] = instance->state[3];
-    scale_estimate[1] = instance->state[4];
-    scale_estimate[2] = instance->state[5];
-
-    scale_estimate[3] = instance->state[4];
-    scale_estimate[4] = instance->state[6];
-    scale_estimate[5] = instance->state[7];
-
-    scale_estimate[6] = instance->state[5];
-    scale_estimate[7] = instance->state[7];
-    scale_estimate[8] = instance->state[8];
+    /* Copy the scale estimate to the destination matrix */
+    memcpy(scale_estimate, &instance->state[3], 9 * sizeof(float));
 }
 
 /*
@@ -205,31 +185,22 @@ float bias_estimate_variance[3], float scale_estimate_variance[9]) {
     assert(bias_estimate_variance != scale_estimate_variance);
 
     /* Copy bias estimate covariance from the state covariance diagonal */
-    bias_estimate_variance[0] = instance->state_covariance[0 * 9 + 0];
-    bias_estimate_variance[1] = instance->state_covariance[1 * 9 + 1];
-    bias_estimate_variance[2] = instance->state_covariance[2 * 9 + 2];
+    bias_estimate_variance[0] = instance->state_covariance[0 * 12 + 0];
+    bias_estimate_variance[1] = instance->state_covariance[1 * 12 + 1];
+    bias_estimate_variance[2] = instance->state_covariance[2 * 12 + 2];
 
-    /*
-    Now copy scale estimate covariance. This is the same approach as we used
-    to extract the scale estimate itself (see TRICAL_estimate_get), except
-    we're pulling the values from the diagonal of the state covariance matrix
-    so the indices are:
+    /* Now copy scale estimate covariance. */
+    scale_estimate_variance[0] = instance->state_covariance[3 * 12 + 3];
+    scale_estimate_variance[1] = instance->state_covariance[4 * 12 + 4];
+    scale_estimate_variance[2] = instance->state_covariance[5 * 12 + 5];
 
-    3*9+3    4*9+4    5*9+5
-    4*9+4    6*9+6    7*9+7
-    5*9+5    7*9+7    8*9+8
-    */
-    scale_estimate_variance[0] = instance->state_covariance[3 * 9 + 3];
-    scale_estimate_variance[1] = instance->state_covariance[4 * 9 + 4];
-    scale_estimate_variance[2] = instance->state_covariance[5 * 9 + 5];
+    scale_estimate_variance[3] = instance->state_covariance[6 * 12 + 6];
+    scale_estimate_variance[4] = instance->state_covariance[7 * 12 + 7];
+    scale_estimate_variance[5] = instance->state_covariance[8 * 12 + 8];
 
-    scale_estimate_variance[3] = instance->state_covariance[4 * 9 + 4];
-    scale_estimate_variance[4] = instance->state_covariance[6 * 9 + 6];
-    scale_estimate_variance[5] = instance->state_covariance[7 * 9 + 7];
-
-    scale_estimate_variance[6] = instance->state_covariance[5 * 9 + 5];
-    scale_estimate_variance[7] = instance->state_covariance[7 * 9 + 7];
-    scale_estimate_variance[8] = instance->state_covariance[8 * 9 + 8];
+    scale_estimate_variance[6] = instance->state_covariance[9 * 12 + 9];
+    scale_estimate_variance[7] = instance->state_covariance[10 * 12 + 10];
+    scale_estimate_variance[8] = instance->state_covariance[11 * 12 + 11];
 }
 
 /*

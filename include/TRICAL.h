@@ -27,7 +27,7 @@ SOFTWARE.
 extern "C" {
 #endif
 
-#define TRICAL_STATE_DIM 9
+#define TRICAL_STATE_DIM 12
 
 typedef struct {
     float field_norm;
@@ -90,11 +90,11 @@ unsigned int TRICAL_measurement_count_get(TRICAL_instance_t *instance);
 /*
 TRICAL_estimate_update
 Updates the calibration estimate of `instance` based on the new data in
-`measurement`. Call this function with each reading you receive from your
-sensor.
+`measurement`, and the current field direction estimate `reference_field`.
+Call this function with each reading you receive from your sensor.
 */
 void TRICAL_estimate_update(TRICAL_instance_t *instance,
-float measurement[3]);
+float measurement[3], float reference_field[3]);
 
 /*
 TRICAL_estimate_get

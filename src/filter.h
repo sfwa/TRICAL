@@ -52,7 +52,7 @@ Reduces `measurement` to a scalar value based on the calibration estimate in
 `state`.
 */
 float _trical_measurement_reduce(float state[TRICAL_STATE_DIM], float
-measurement[3]);
+measurement[3], float field[3]);
 
 /*
 _trical_measurement_calibrate
@@ -69,7 +69,7 @@ Generates a new calibration estimate for `instance` incorporating the raw
 sensor readings in `measurement`.
 */
 void _trical_filter_iterate(TRICAL_instance_t *instance,
-float measurement[3]);
+float measurement[3], float field[3]);
 
 #ifdef __cplusplus
 }

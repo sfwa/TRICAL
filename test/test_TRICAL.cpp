@@ -78,32 +78,32 @@ TEST(TRICAL, EstimateUpdateIdentity) {
         measurement[0] = 1.0;
         measurement[1] = 0.0;
         measurement[2] = 0.0;
-        TRICAL_estimate_update(&cal, measurement);
+        TRICAL_estimate_update(&cal, measurement, measurement);
 
         measurement[0] = 0.0;
         measurement[1] = 1.0;
         measurement[2] = 0.0;
-        TRICAL_estimate_update(&cal, measurement);
+        TRICAL_estimate_update(&cal, measurement, measurement);
 
         measurement[0] = 0.0;
         measurement[1] = 0.0;
         measurement[2] = 1.0;
-        TRICAL_estimate_update(&cal, measurement);
+        TRICAL_estimate_update(&cal, measurement, measurement);
 
         measurement[0] = -1.0;
         measurement[1] = 0.0;
         measurement[2] = 0.0;
-        TRICAL_estimate_update(&cal, measurement);
+        TRICAL_estimate_update(&cal, measurement, measurement);
 
         measurement[0] = 0.0;
         measurement[1] = -1.0;
         measurement[2] = 0.0;
-        TRICAL_estimate_update(&cal, measurement);
+        TRICAL_estimate_update(&cal, measurement, measurement);
 
         measurement[0] = 0.0;
         measurement[1] = 0.0;
         measurement[2] = -1.0;
-        TRICAL_estimate_update(&cal, measurement);
+        TRICAL_estimate_update(&cal, measurement, measurement);
     }
 
     float bias_estimate[3], scale_estimate[9];
@@ -134,39 +134,57 @@ TEST(TRICAL, EstimateUpdateBias) {
 
     TRICAL_init(&cal);
 
-    float measurement[3];
+    float measurement[3], ref[3];
     unsigned int i;
 
-    for (i = 0; i < 100; i++) {
+    for (i = 0; i < 200; i++) {
         measurement[0] = 2.0;
         measurement[1] = 0.0;
         measurement[2] = 0.0;
-        TRICAL_estimate_update(&cal, measurement);
+        ref[0] = 1.0;
+        ref[1] = 0.0;
+        ref[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement, ref);
 
         measurement[0] = 1.0;
         measurement[1] = 1.0;
         measurement[2] = 0.0;
-        TRICAL_estimate_update(&cal, measurement);
+        ref[0] = 0.0;
+        ref[1] = 1.0;
+        ref[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement, ref);
 
         measurement[0] = 1.0;
         measurement[1] = 0.0;
         measurement[2] = 1.0;
-        TRICAL_estimate_update(&cal, measurement);
+        ref[0] = 0.0;
+        ref[1] = 0.0;
+        ref[2] = 1.0;
+        TRICAL_estimate_update(&cal, measurement, ref);
 
         measurement[0] = 0.0;
         measurement[1] = 0.0;
         measurement[2] = 0.0;
-        TRICAL_estimate_update(&cal, measurement);
+        ref[0] = -1.0;
+        ref[1] = 0.0;
+        ref[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement, ref);
 
         measurement[0] = 1.0;
         measurement[1] = -1.0;
         measurement[2] = 0.0;
-        TRICAL_estimate_update(&cal, measurement);
+        ref[0] = 0.0;
+        ref[1] = -1.0;
+        ref[2] = 0.0;
+        TRICAL_estimate_update(&cal, measurement, ref);
 
         measurement[0] = 1.0;
         measurement[1] = 0.0;
         measurement[2] = -1.0;
-        TRICAL_estimate_update(&cal, measurement);
+        ref[0] = 0.0;
+        ref[1] = 0.0;
+        ref[2] = -1.0;
+        TRICAL_estimate_update(&cal, measurement, ref);
     }
 
     float bias_estimate[3], scale_estimate[9];
@@ -199,9 +217,12 @@ TEST(TRICAL, EstimateGet) {
     cal.state[3] = 1.0;
     cal.state[4] = 0.5;
     cal.state[5] = 0.1;
-    cal.state[6] = 1.0;
-    cal.state[7] = 0.5;
-    cal.state[8] = 1.0;
+    cal.state[6] = 0.5;
+    cal.state[7] = 1.0;
+    cal.state[8] = 0.5;
+    cal.state[9] = 0.1;
+    cal.state[10] = 0.5;
+    cal.state[11] = 1.0;
 
     float bias_estimate[3], scale_estimate[9];
     TRICAL_estimate_get(&cal, bias_estimate, scale_estimate);
@@ -234,19 +255,25 @@ TEST(TRICAL, EstimateGetExt) {
     cal.state[3] = 1.0;
     cal.state[4] = 0.5;
     cal.state[5] = 0.1;
-    cal.state[6] = 1.0;
-    cal.state[7] = 0.5;
-    cal.state[8] = 1.0;
+    cal.state[6] = 0.5;
+    cal.state[7] = 1.0;
+    cal.state[8] = 0.5;
+    cal.state[9] = 0.1;
+    cal.state[10] = 0.5;
+    cal.state[11] = 1.0;
 
     cal.state_covariance[0] = 10.0;
-    cal.state_covariance[10] = 20.0;
-    cal.state_covariance[20] = 30.0;
-    cal.state_covariance[30] = 40.0;
-    cal.state_covariance[40] = 50.0;
-    cal.state_covariance[50] = 60.0;
-    cal.state_covariance[60] = 70.0;
-    cal.state_covariance[70] = 80.0;
-    cal.state_covariance[80] = 90.0;
+    cal.state_covariance[13] = 20.0;
+    cal.state_covariance[26] = 30.0;
+    cal.state_covariance[39] = 40.0;
+    cal.state_covariance[52] = 50.0;
+    cal.state_covariance[65] = 60.0;
+    cal.state_covariance[78] = 70.0;
+    cal.state_covariance[91] = 80.0;
+    cal.state_covariance[104] = 90.0;
+    cal.state_covariance[117] = 100.0;
+    cal.state_covariance[130] = 110.0;
+    cal.state_covariance[143] = 120.0;
 
     float bias_estimate[3], scale_estimate[9], bias_estimate_variance[3],
           scale_estimate_variance[9];
@@ -277,13 +304,13 @@ TEST(TRICAL, EstimateGetExt) {
     EXPECT_FLOAT_EQ(50.0, scale_estimate_variance[1]);
     EXPECT_FLOAT_EQ(60.0, scale_estimate_variance[2]);
 
-    EXPECT_FLOAT_EQ(50.0, scale_estimate_variance[3]);
-    EXPECT_FLOAT_EQ(70.0, scale_estimate_variance[4]);
-    EXPECT_FLOAT_EQ(80.0, scale_estimate_variance[5]);
+    EXPECT_FLOAT_EQ(70.0, scale_estimate_variance[3]);
+    EXPECT_FLOAT_EQ(80.0, scale_estimate_variance[4]);
+    EXPECT_FLOAT_EQ(90.0, scale_estimate_variance[5]);
 
-    EXPECT_FLOAT_EQ(60.0, scale_estimate_variance[6]);
-    EXPECT_FLOAT_EQ(80.0, scale_estimate_variance[7]);
-    EXPECT_FLOAT_EQ(90.0, scale_estimate_variance[8]);
+    EXPECT_FLOAT_EQ(100.0, scale_estimate_variance[6]);
+    EXPECT_FLOAT_EQ(110.0, scale_estimate_variance[7]);
+    EXPECT_FLOAT_EQ(120.0, scale_estimate_variance[8]);
 }
 
 /*
@@ -302,9 +329,12 @@ TEST(TRICAL, Calibrate) {
     cal.state[3] = 1.0;
     cal.state[4] = 0.5;
     cal.state[5] = 0.1;
-    cal.state[6] = 1.0;
-    cal.state[7] = 0.5;
-    cal.state[8] = 1.0;
+    cal.state[6] = 0.5;
+    cal.state[7] = 1.0;
+    cal.state[8] = 0.5;
+    cal.state[9] = 0.1;
+    cal.state[10] = 0.5;
+    cal.state[11] = 1.0;
 
     float measurement[3] = { 1.0, 2.0, 3.0 }, result[3];
     TRICAL_measurement_calibrate(&cal, measurement, result);

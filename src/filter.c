@@ -32,15 +32,15 @@ SOFTWARE.
 #ifdef DEBUG
 #include <stdio.h>
 
-static void _print_matrix(const char *label, real_t mat[], size_t rows,
+static void _print_matrix(const char *label, float mat[], size_t rows,
 size_t cols);
 
-static void _print_matrix(const char *label, real_t mat[], size_t rows,
+static void _print_matrix(const char *label, float mat[], size_t rows,
 size_t cols) {
     printf("%s", label);
     for (size_t i = 0; i < cols; i++) {
         for (size_t j = 0; j < rows; j++) {
-            printf("%12.6g ", mat[j*cols + i]);
+            printf("%12.6f ", mat[j*cols + i]);
         }
         printf("\n");
     }
@@ -97,7 +97,9 @@ already implemented that so it seemed easier to continue with that approach.
 /*
 _trical_measurement_reduce
 Reduces `measurement` to a scalar value based on the calibration estimate in
-`state`.
+`state` and the current field direction estimate `field` (if no absolute
+orientation calibration is required, the same vector can be supplied for
+`measurement` and `field`).
 
 FIXME: It's not clear to me why the measurement model should be as in (2a)
 above, when we can just apply the current calibration estimate to the
@@ -105,11 +107,12 @@ measurement and take its magnitude. Look into this further if the below
 approach doesn't work.
 */
 float _trical_measurement_reduce(float state[TRICAL_STATE_DIM], float
-measurement[3]) {
+measurement[3], float field[3]) {
     float temp[3];
     _trical_measurement_calibrate(state, measurement, temp);
 
-    return fsqrt(temp[X] * temp[X] + temp[Y] * temp[Y] + temp[Z] * temp[Z]);
+    return fsqrt(fabs(temp[X] * field[X] + temp[Y] * field[Y] +
+                      temp[Z] * field[Z]));
 }
 
 /*
@@ -122,8 +125,8 @@ Implements
 B' = (I_{3x3} + D)B - b
 
 where B' is the calibrated measurement, I_{3x3} is the 3x3 identity matrix,
-D is the (symmetric) scale calibration matrix, B is the raw measurement, and
-b is the bias vector.
+D is the scale calibration matrix, B is the raw measurement, and b is the bias
+vector.
 */
 void _trical_measurement_calibrate(float state[TRICAL_STATE_DIM],
 float measurement[3], float calibrated_measurement[3]) {
@@ -134,10 +137,10 @@ float measurement[3], float calibrated_measurement[3]) {
     v[1] = measurement[1] - s[1];
     v[2] = measurement[2] - s[2];
 
-    /* Symmetric 3x3 matrix multiply */
+    /* 3x3 matrix multiply */
     c[0] = v[0] * (s[3] + 1.0f) + v[1] * s[4] + v[2] * s[5];
-    c[1] = v[0] * s[4] + v[1] * (s[6] + 1.0f) + v[2] * s[7];
-    c[2] = v[0] * s[5] + v[1] * s[7] + v[2] * (s[8] + 1.0f);
+    c[1] = v[0] * s[6] + v[1] * (s[7] + 1.0f) + v[2] * s[8];
+    c[2] = v[0] * s[9] + v[1] * s[10] + v[2] * (s[11] + 1.0f);
 }
 
 /*
@@ -146,7 +149,7 @@ Generates a new calibration estimate for `instance` incorporating the raw
 sensor readings in `measurement`.
 */
 void _trical_filter_iterate(TRICAL_instance_t *instance,
-float measurement[3]) {
+float measurement[3], float field[3]) {
     unsigned int i, j, k, l, col;
 
     float *restrict covariance = instance->state_covariance;
@@ -177,29 +180,30 @@ float measurement[3]) {
     Handle central sigma point -- process the measurement based on the current
     state vector
     */
-    measurement_estimates[0] = _trical_measurement_reduce(state, measurement);
+    measurement_estimates[0] = _trical_measurement_reduce(state, measurement,
+                                                          field);
 
-    #pragma MUST_ITERATE(9, 9);
+    #pragma MUST_ITERATE(12, 12);
     for (i = 0, col = 0; i < TRICAL_STATE_DIM; i++, col += TRICAL_STATE_DIM) {
         /*
         Handle the positive sigma point -- perturb the state vector based on
         the current column of the covariance matrix, and process the
         measurement based on the resulting state estimate
         */
-        #pragma MUST_ITERATE(9, 9);
+        #pragma MUST_ITERATE(12, 12);
         for (k = col, l = 0; l < TRICAL_STATE_DIM; k++, l++) {
             temp_sigma[l] = state[l] + covariance_llt[k];
         }
         measurement_estimates[i + 1] =
-            _trical_measurement_reduce(temp_sigma, measurement);
+            _trical_measurement_reduce(temp_sigma, measurement, field);
 
         /* Handle the negative sigma point -- mirror of the above */
-        #pragma MUST_ITERATE(9, 9);
+        #pragma MUST_ITERATE(12, 12);
         for (k = col, l = 0; l < TRICAL_STATE_DIM; k++, l++) {
             temp_sigma[l] = state[l] - covariance_llt[k];
         }
         measurement_estimates[i + 1 + TRICAL_STATE_DIM] =
-            _trical_measurement_reduce(temp_sigma, measurement);
+            _trical_measurement_reduce(temp_sigma, measurement, field);
 
         /* Calculate the measurement estimate sum as we go */
         temp = measurement_estimates[i + 1] +
@@ -219,7 +223,7 @@ float measurement[3]) {
     */
     float measurement_estimate_covariance = 0.0;
 
-    #pragma MUST_ITERATE(19, 19);
+    #pragma MUST_ITERATE(25, 25);
     for (i = 0; i < TRICAL_NUM_SIGMA; i++) {
         measurement_estimates[i] -= measurement_estimate_mean;
 
@@ -246,10 +250,10 @@ float measurement[3]) {
     innovation = instance->field_norm - measurement_estimate_mean;
 
     /* Iterate over sigma points, two at a time */
-    #pragma MUST_ITERATE(9, 9);
+    #pragma MUST_ITERATE(12, 12);
     for (i = 0; i < TRICAL_STATE_DIM; i++) {
         /* Iterate over the cross-correlation matrix */
-        #pragma MUST_ITERATE(9, 9);
+        #pragma MUST_ITERATE(12, 12);
         for (j = 0; j < TRICAL_STATE_DIM; j++) {
             /*
             We're regenerating the sigma points as we go, so that we don't
@@ -269,7 +273,7 @@ float measurement[3]) {
     Scale the results of the previous step, and add in the scaled central
     sigma point
     */
-    #pragma MUST_ITERATE(9, 9);
+    #pragma MUST_ITERATE(12, 12);
     for (j = 0; j < TRICAL_STATE_DIM; j++) {
         temp = TRICAL_SIGMA_WC0 * measurement_estimates[0] * state[j];
         cross_correlation[j] = TRICAL_SIGMA_WCI * cross_correlation[j] + temp;
@@ -284,7 +288,7 @@ float measurement[3]) {
     */
     float kalman_gain;
     temp = recip(measurement_estimate_covariance);
-    #pragma MUST_ITERATE(9, 9);
+    #pragma MUST_ITERATE(12, 12);
     for (i = 0; i < TRICAL_STATE_DIM; i++) {
         kalman_gain = cross_correlation[i] * temp;
         state[i] += kalman_gain * innovation;
@@ -306,11 +310,11 @@ float measurement[3]) {
     estimate covariance during the outer product, we can skip that whole step
     and just use cross correlation instead.
     */
-    #pragma MUST_ITERATE(9)
+    #pragma MUST_ITERATE(12, 12)
     for (i = 0; i < TRICAL_STATE_DIM; i++) {
         temp = -cross_correlation[i];
 
-        #pragma MUST_ITERATE(9)
+        #pragma MUST_ITERATE(12, 12)
         for (j = 0; j < TRICAL_STATE_DIM; j++) {
             covariance[i * TRICAL_STATE_DIM + j] +=
                 temp * cross_correlation[j];
