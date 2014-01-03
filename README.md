@@ -22,11 +22,14 @@ the field readings from the sensor. These are in the same units as the field
 norm.
 
 The calibration parameters used are a 3-vector representing the estimated
-bias, and a 3x3 symmetric matrix representing the estimated scale error.
+bias, and a 3x3 matrix representing the estimated scale factor error.
 
 These parameters allow a magnetometer to be corrected for hard and soft iron
-distortion, sensor bias, sensor scale error, and sensor non-orthogonality. An
-accelerometer can be corrected for bias, scale error and non-orthogonality.
+distortion, sensor bias, sensor scale error, sensor non-orthogonality, and
+misalignement of the sensor relative to the field (or, for that matter,
+misalignment of the actual field relative to the WMM prediction). An
+accelerometer can be corrected for bias, scale error, non-orthogonality, and
+misalignment.
 
 ## Usage
 
@@ -37,8 +40,9 @@ noise.
 
 The field norm should be the magnitude of the calibrated readings; TRICAL will
 scale your measurements to reach that value. If possible, it should be fairly
-close to the magnitude of the measurements themselves, since that will reduce
-the time taken to converge on an estimate of the calibration parameters.
+close to the magnitude of the measurements themselves (ideally 1.0), since
+that will reduce the time taken to converge on an estimate of the calibration
+parameters.
 
 The measurement noise should be something like the standard deviation of your
 measurement error. If in doubt, you can use the RMS noise value from your
@@ -69,11 +73,11 @@ void your_init_proc(void) {
 }
 
 void your_sensor_read_proc(void) {
-    float sensor_reading[3];
+    float sensor_reading[3], expected_field[3];
 
     /* ... */
 
-    TRICAL_estimate_update(&global_instance, sensor_reading);
+    TRICAL_estimate_update(&global_instance, sensor_reading, expected_field);
 
     /* ... */
 
