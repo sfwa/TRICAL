@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.compiler.cc }}, ${{ matrix.wide }} sums
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - { cc: gcc, cxx: g++ }
+          - { cc: clang, cxx: clang++ }
+        wide: [double, float]
+    env:
+      CC: ${{ matrix.compiler.cc }}
+      CXX: ${{ matrix.compiler.cxx }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install googletest
+        run: sudo apt-get update && sudo apt-get install -y libgtest-dev
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DTRICAL_WIDE_TYPE=${{ matrix.wide }}
+          -DTRICAL_WARNINGS_AS_ERRORS=ON
+      - name: Build
+        run: cmake --build build --target TRICAL TRICALstatic unittest benchmark
+      - name: Test
+        run: ./build/test/unittest
+
+  sanitizers:
+    name: assertions, address and undefined behaviour sanitizers
+    runs-on: ubuntu-latest
+    env:
+      CC: gcc
+      CXX: g++
+      CFLAGS: -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
+      CXXFLAGS: -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
+      LDFLAGS: -fsanitize=address,undefined
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install googletest
+        run: sudo apt-get update && sudo apt-get install -y libgtest-dev
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+      - name: Build
+        run: cmake --build build --target unittest
+      - name: Test
+        run: ./build/test/unittest
+
+  python:
+    name: Python module
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Build the shared library
+        run: cmake -S . -B build && cmake --build build --target TRICAL
+      - name: Test
+        run: python -m unittest discover python/test
+        env:
+          TRICAL_LIBRARY: ${{ github.workspace }}/build/libTRICAL.so
