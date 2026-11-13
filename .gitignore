@@ -1,16 +1,27 @@
+# CMake (in-tree builds)
 CMakeCache.txt
 CMakeFiles
 Makefile
 cmake_install.cmake
 install_manifest.txt
-*.pyc
-.DS_Store
 *.cmake
+_deps/
+
+# Build output
 build/
 *.dylib
 *.so
+*.dll
 *.a
 test/src/
 test/tmp/
 Debug/
 Release/
+
+# Python
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+
+.DS_Store
